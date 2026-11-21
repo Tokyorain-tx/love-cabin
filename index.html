@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffd6e7">
+<title>❤ 我们的恋爱小屋</title>
+<!-- 引入 Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:linear-gradient(160deg,#fff0f6 0%,#f7ecff 45%,#eef4ff 100%);
+  background-attachment:fixed;
+  min-height:100vh;color:#4a3a4a;
+  padding-bottom:120px;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.hearts-bg{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.hearts-bg span{position:absolute;bottom:-80px;animation:floatUp linear infinite;will-change:transform}
+@keyframes floatUp{to{transform:translateY(-115vh) rotate(360deg)}}
+.header{max-width:820px;margin:0 auto;padding:30px 20px 6px;position:relative;z-index:1;text-align:center}
+.header h1{
+  font-size:1.55rem;font-weight:800;letter-spacing:.5px;
+  background:linear-gradient(90deg,#ff6b9d,#c56cf0);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.header-sub{font-size:.8rem;color:#b09ab8;margin-top:6px}
+main{max-width:820px;margin:0 auto;padding:14px 16px 0;position:relative;z-index:1}
+.page{display:none}
+.page.active{display:block;animation:fadeUp .38s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.card{
+  background:rgba(255,255,255,.78);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:22px;padding:20px;
+  box-shadow:0 10px 30px rgba(255,107,157,.10),0 2px 8px rgba(160,120,200,.06);
+  margin-bottom:16px;
+}
+.card h2{font-size:1.02rem;margin-bottom:14px;display:flex;align-items:center;gap:7px;color:#5b4359}
+.hero{
+  background:linear-gradient(135deg,#ff9ec4 0%,#cf8bf5 100%);
+  color:#fff;text-align:center;padding:34px 20px;border:none;
+  box-shadow:0 18px 44px rgba(200,120,200,.32);
+}
+.hero-label{font-size:.88rem;opacity:.92;letter-spacing:2px}
+.hero-days{font-size:4.2rem;font-weight:800;line-height:1.1;margin:6px 0 2px;
+  text-shadow:0 6px 22px rgba(150,60,140,.28);font-variant-numeric:tabular-nums}
+.hero-days em{font-size:1.3rem;font-style:normal;font-weight:600;margin-left:6px;opacity:.9}
+.hero-precise{font-size:.82rem;opacity:.88;margin-bottom:18px;font-variant-numeric:tabular-nums}
+.hero .btn{background:rgba(255,255,255,.95);color:#d4508f;box-shadow:0 6px 18px rgba(120,50,110,.18)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 20px;border:none;border-radius:999px;
+  background:linear-gradient(135deg,#ff8fbc,#c56cf0);
+  color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;
+  box-shadow:0 6px 18px rgba(255,107,157,.32);
+  transition:transform .18s,box-shadow .18s;
+}
+.btn:hover{box-shadow:0 9px 24px rgba(255,107,157,.42)}
+.btn:active{transform:scale(.95)}
+.btn.small{padding:8px 15px;font-size:.8rem}
+.btn.ghost{background:rgba(255,255,255,.9);color:#c05ba8;box-shadow:0 4px 14px rgba(190,120,200,.18);border:1px solid #f3d9ec}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.mini{text-align:center;cursor:pointer;padding:20px 12px;margin-bottom:0;
+  transition:transform .22s,box-shadow .22s}
+.mini:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(255,107,157,.22)}
+.mini:active{transform:scale(.97)}
+.mini-icon{font-size:1.9rem;margin-bottom:8px}
+.mini-title{font-weight:700;font-size:.92rem}
+.mini-sub{font-size:.72rem;color:#a394a6;margin-top:4px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.8rem;color:#9b8b9b;margin-bottom:7px;font-weight:600}
+input[type=date],input[type=text],textarea{
+  width:100%;padding:12px 15px;border-radius:14px;border:1.5px solid #f0dced;
+  background:rgba(255,255,255,.9);font-size:.9rem;font-family:inherit;color:#4a3a4a;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+input:focus,textarea:focus{border-color:#ff9ec4;box-shadow:0 0 0 4px rgba(255,158,196,.18)}
+textarea{resize:vertical;min-height:84px;line-height:1.6}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.stat{background:linear-gradient(160deg,#fff6fb,#f6efff);border-radius:16px;padding:14px 4px}
+.stat b{display:block;font-size:1.18rem;color:#d4508f;font-variant-numeric:tabular-nums;font-weight:800}
+.stat span{font-size:.68rem;color:#a394a6}
+.special-item{
+  display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:16px;
+  background:linear-gradient(135deg,#fff6fb,#f7f0ff);margin-bottom:9px;
+  border:1px solid #f7e6f5;
+}
+.special-info{flex:1;min-width:0}
+.special-name{font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.special-date{font-size:.7rem;color:#a394a6;margin-top:2px}
+.special-days{font-size:.78rem;font-weight:700;color:#d4508f;text-align:right;white-space:nowrap}
+.special-days.past{color:#b0a3b8}
+.del-x{
+  width:26px;height:26px;border-radius:50%;border:none;background:rgba(200,150,200,.16);
+  color:#b57ba5;font-size:1rem;line-height:1;cursor:pointer;flex-shrink:0;
+  display:grid;place-items:center;transition:background .2s,color .2s;
+}
+.del-x:hover{background:#ff8fbc;color:#fff}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:10px;margin-top:16px}
+.photo-item{
+  position:relative;aspect-ratio:1;border-radius:15px;overflow:hidden;cursor:pointer;
+  background:#f6eef9;box-shadow:0 4px 14px rgba(180,120,190,.14);
+  transition:transform .25s,box-shadow .25s;
+}
+.photo-item:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 10px 26px rgba(180,120,190,.28)}
+.photo-item img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-item .ph-note{
+  position:absolute;left:0;right:0;bottom:0;padding:14px 8px 6px;font-size:.62rem;color:#fff;
+  background:linear-gradient(transparent,rgba(80,30,70,.72));
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.empty{text-align:center;color:#b6a6bd;font-size:.82rem;padding:34px 10px;line-height:1.9}
+.lightbox{
+  position:fixed;inset:0;background:rgba(40,20,45,.88);backdrop-filter:blur(10px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;z-index:200;
+}
+.lightbox.show{display:flex;animation:fadeUp .25s}
+.lightbox img{max-width:100%;max-height:66vh;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.lb-note{color:#ffd9ec;font-size:.85rem;margin-top:16px;text-align:center;max-width:90%;line-height:1.6}
+.lb-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center}
+.lb-actions button{
+  padding:10px 18px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;
+  font-size:.82rem;font-weight:600;background:rgba(255,255,255,.92);color:#c05ba8;
+}
+.lb-actions button.danger{background:rgba(255,120,150,.92);color:#fff}
+.tabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:1;min-width:98px;padding:11px 8px;border-radius:14px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.8);color:#a394a6;font-family:inherit;font-size:.78rem;font-weight:700;
+  white-space:nowrap;transition:all .2s;box-shadow:0 3px 10px rgba(190,130,200,.1);
+}
+.tab.active{background:linear-gradient(135deg,#ff8fbc,#c56cf0);color:#fff;box-shadow:0 6px 18px rgba(255,107,157,.32)}
+.game-panel{display:none}
+.game-panel.active{display:block;animation:fadeUp .3s}
+.game-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.game-head span{font-size:.82rem;color:#8a7a90;font-weight:600}
+.game-head b{color:#d4508f;font-size:1rem}
+.game-msg{text-align:center;font-size:.88rem;font-weight:700;color:#d4508f;margin-top:14px;min-height:22px}
+.mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;max-width:400px;margin:0 auto}
+.mem-card{aspect-ratio:1;perspective:700px;cursor:pointer}
+.mem-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,.2,.2,1)}
+.mem-card.flipped .mem-inner{transform:rotateY(180deg)}
+.mem-front,.mem-back{
+  position:absolute;inset:0;display:grid;place-items:center;border-radius:14px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;font-size:1.5rem;
+}
+.mem-front{background:linear-gradient(135deg,#ffb3d0,#d6b3ff);color:#fff;font-weight:800;font-size:1.1rem;box-shadow:0 4px 12px rgba(200,130,190,.25)}
+.mem-back{background:#fff;transform:rotateY(180deg);box-shadow:0 4px 12px rgba(200,130,190,.18)}
+.mem-card.matched .mem-back{background:linear-gradient(135deg,#fff0f8,#f3e9ff);box-shadow:0 0 0 2px #ffb3d0 inset}
+.mem-card.matched{animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.08)}}
+.catch-area{
+  position:relative;height:330px;border-radius:20px;overflow:hidden;
+  background:linear-gradient(135deg,#fff5fa,#f3ecff);
+  border:2px dashed #f0c9e0;
+}
+.catch-heart{
+  position:absolute;width:62px;height:62px;display:none;place-items:center;
+  font-size:2rem;cursor:pointer;user-select:none;
+  transition:left .16s ease-out,top .16s ease-out;
+  filter:drop-shadow(0 4px 10px rgba(255,110,160,.4));
+  animation:beat 1s ease-in-out infinite;
+}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.13)}}
+.catch-tip{position:absolute;inset:0;display:grid;place-items:center;color:#c9b3cc;font-size:.85rem;pointer-events:none;text-align:center;padding:20px}
+.rps-score{text-align:center;font-size:1rem;color:#8a7a90;margin-bottom:18px;font-weight:600}
+.rps-score b{color:#d4508f;font-size:1.5rem;margin:0 6px}
+.rps-btns{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.rps-btns button{
+  width:74px;height:74px;border-radius:22px;border:none;cursor:pointer;font-size:2rem;
+  background:linear-gradient(160deg,#fff,#fdf2fa);box-shadow:0 6px 18px rgba(200,140,190,.2);
+  transition:transform .16s,box-shadow .16s;
+}
+.rps-btns button:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(200,140,190,.3)}
+.rps-btns button:active{transform:scale(.92)}
+.rps-result{text-align:center;font-size:.95rem;font-weight:700;color:#d4508f;min-height:50px;line-height:1.6}
+.quote-box{
+  background:linear-gradient(135deg,#fff2f9,#f5ecff);border-radius:18px;padding:22px 18px;
+  font-size:.95rem;line-height:1.85;color:#6b5270;text-align:center;
+  border-left:4px solid #ffb3d0;margin-bottom:14px;min-height:88px;
+  display:flex;align-items:center;justify-content:center;
+}
+.note-item{
+  background:linear-gradient(135deg,#fff6fb,#f8f1ff);border-radius:16px;padding:14px 16px;
+  margin-bottom:10px;position:relative;border:1px solid #f7e6f5;
+}
+.note-text{font-size:.88rem;line-height:1.7;color:#5b4359;word-break:break-word;white-space:pre-wrap;padding-right:26px}
+.note-time{font-size:.68rem;color:#b6a6bd;margin-top:8px}
+.note-item .del-x{position:absolute;top:12px;right:12px}
+.nav{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;gap:2px;padding:7px;z-index:150;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:999px;border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 10px 34px rgba(255,107,157,.26),0 2px 10px rgba(150,100,160,.1);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:8px 11px;border:none;background:transparent;border-radius:999px;
+  font-size:1.1rem;line-height:1;cursor:pointer;color:#b09ab8;font-family:inherit;
+  transition:all .22s;
+}
+.nav-btn span{font-size:.6rem;font-weight:700;margin-top:3px}
+.nav-btn.active{background:linear-gradient(135deg,#ff8fbc,#c56cf0);color:#fff;box-shadow:0 4px 14px rgba(255,107,157,.38)}
+.hint{font-size:.72rem;color:#b6a6bd;line-height:1.7;margin-top:10px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,#f0dced,transparent);margin:16px 0}
+.toast{
+  position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:rgba(70,40,80,.92);color:#fff;padding:11px 22px;border-radius:999px;
+  font-size:.82rem;z-index:300;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:420px){
+  .hero-days{font-size:3.4rem}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .nav-btn{padding:8px 8px}
+  .photo-grid{grid-template-columns:repeat(auto-fill,minmax(88px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<div class="hearts-bg" id="heartsBg"></div>
+
+<header class="header">
+  <h1>❤ 我们的恋爱小屋</h1>
+  <p class="header-sub">每一天都想和你在一起</p>
+</header>
+
+<main>
+  <section class="page active" id="page-home">
+    <div class="card hero">
+      <div class="hero-label">我们已经在一起</div>
+      <div class="hero-days"><span id="homeDays">0</span><em>天</em></div>
+      <div class="hero-precise" id="homePrecise">0 天 0 小时 0 分 0 秒</div>
+      <button class="btn" data-go="timer">⚙️ 设置纪念日</button>
+    </div>
+    <div class="grid2">
+      <div class="card mini" data-go="gallery">
+        <div class="mini-icon">📷</div>
+        <div class="mini-title">照片墙</div>
+        <div class="mini-sub" id="miniPhotos">0 张回忆</div>
+      </div>
+      <div class="card mini" data-go="games">
+        <div class="mini-icon">🎮</div>
+        <div class="mini-title">互动小游戏</div>
+        <div class="mini-sub">来玩一局吧</div>
+      </div>
+      <div class="card mini" data-go="notes">
+        <div class="mini-icon">💌</div>
+        <div class="mini-title">悄悄话</div>
+        <div class="mini-sub" id="miniNotes">0 条留言</div>
+      </div>
+      <div class="card mini" data-go="timer">
+        <div class="mini-icon">⏳</div>
+        <div class="mini-title">时光机</div>
+        <div class="mini-sub" id="miniSpecial">0 个重要日子</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-timer">
+    <div class="card">
+      <h2>💗 我们的开始</h2>
+      <div class="field">
+        <label>选择我们在一起的那一天</label>
+        <input type="date" id="startDateInput">
+      </div>
+      <button class="btn small" id="saveStartBtn">保存纪念日</button>
+      <div class="hint">保存后，所有设备都会同步更新天数～</div>
+    </div>
+
+    <div class="card">
+      <h2>⏱ 时光统计</h2>
+      <div class="stats">
+        <div class="stat"><b id="stDays">0</b><span>天</span></div>
+        <div class="stat"><b id="stHours">0</b><span>小时</span></div>
+        <div class="stat"><b id="stMins">0</b><span>分钟</span></div>
+        <div class="stat"><b id="stSecs">0</b><span>秒</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📌 重要日子</h2>
+      <div id="specialList"></div>
+      <div class="divider"></div>
+      <div class="row" style="margin-bottom:10px">
+        <input type="text" id="specialName" placeholder="名称，如：她的生日" style="flex:1.4">
+        <input type="date" id="specialDate" style="flex:1">
+      </div>
+      <button class="btn small" id="addSpecialBtn">＋ 添加日子</button>
+    </div>
+  </section>
+
+  <section class="page" id="page-gallery">
+    <div class="card">
+      <h2>📷 我们的照片墙</h2>
+      <label class="btn" style="cursor:pointer">
+        ＋ 添加照片
+        <input type="file" id="photoInput" accept="image/*" multiple hidden>
+      </label>
+      <div class="photo-grid" id="photoGrid"></div>
+      <div class="empty" id="photoEmpty">还没有照片呢～<br>点上面的按钮，把我们的回忆放进来吧 💕</div>
+    </div>
+  </section>
+
+  <section class="page" id="page-games">
+    <div class="tabs">
+      <button class="tab active" data-game="memory">🃏 翻牌记忆</button>
+      <button class="tab" data-game="catch">💗 抓住爱心</button>
+      <button class="tab" data-game="rps">✊ 石头剪刀布</button>
+    </div>
+
+    <div class="game-panel active" id="game-memory">
+      <div class="card">
+        <div class="game-head">
+          <span>步数 <b id="memMoves">0</b></span>
+          <span>配对 <b id="memPairs">0</b>/8</span>
+          <button class="btn small ghost" id="memReset">重新开始</button>
+        </div>
+        <div class="mem-grid" id="memGrid"></div>
+        <div class="game-msg" id="memMsg"></div>
+      </div>
+    </div>
+
+    <div class="game-panel" id="game-catch">
+      <div class="card">
+        <div class="game-head">
+          <span>剩余 <b id="catchTime">30</b> 秒</span>
+          <span>得分 <b id="catchScore">0</b></span>
+          <span>最佳 <b id="catchBest">0</b></span>
+          <button class="btn small" id="catchBtn">开始游戏</button>
+        </div>
+        <div class="catch-area" id="catchArea">
+          <div class="catch-heart" id="catchHeart">💗</div>
+          <div class="catch-tip" id="catchTip">点击「开始游戏」，30 秒内抓住所有爱心～</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-panel" id="game-rps">
+      <div class="card">
+        <div class="rps-score">你 <b id="rpsMe">0</b> : <b id="rpsCpu">0</b> 我</div>
+        <div class="rps-btns">
+          <button data-rps="rock">✊</button>
+          <button data-rps="scissors">✌️</button>
+          <button data-rps="paper">✋</button>
+        </div>
+        <div class="rps-result" id="rpsResult">选一个出拳吧～</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-notes">
+    <div class="card">
+      <h2>💫 今日情话</h2>
+      <div class="quote-box" id="quoteBox">你一笑，我整个世界都亮了。</div>
+      <button class="btn small" id="quoteBtn">换一句 💫</button>
+    </div>
+
+    <div class="card">
+      <h2>💌 留言板</h2>
+      <textarea id="noteInput" placeholder="写下此刻想对 TA 说的话…"></textarea>
+      <div style="margin-top:12px">
+        <button class="btn small" id="addNoteBtn">发送 💌</button>
+      </div>
+      <div class="divider"></div>
+      <div id="noteList"></div>
+      <div class="empty" id="noteEmpty" style="display:none">还没有留言，写下第一句吧～</div>
+    </div>
+  </section>
+</main>
+
+<nav class="nav" id="nav">
+  <button class="nav-btn active" data-page="home">🏠<span>首页</span></button>
+  <button class="nav-btn" data-page="timer">⏳<span>时光</span></button>
+  <button class="nav-btn" data-page="gallery">📷<span>照片</span></button>
+  <button class="nav-btn" data-page="games">🎮<span>游戏</span></button>
+  <button class="nav-btn" data-page="notes">💌<span>悄悄话</span></button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lbImg" alt="回忆">
+  <div class="lb-note" id="lbNoteText"></div>
+  <div class="lb-actions">
+    <button id="lbNote">✏️ 写句话</button>
+    <button id="lbDel" class="danger">🗑 删除</button>
+    <button id="lbClose">✕ 关闭</button>
+  </div>
+</div>
+
+<script>
+/* =======================================================
+   ⚠️ 第一步：把这里替换成你自己的 Supabase 信息！
+   ======================================================= */
+const SUPABASE_URL = 'https://uupqklmxbdgwvkblzks.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1cHFrbG14YmRndndrYmtsemtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNjY1MDcsImV4cCI6MjExMDg0MjUwN30.qLp9radCfiaSPJ31b-zgehPUbhxcx6MKvDbm2DPJ4z0';
+
+/* 初始化 Supabase */
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+/* =======================================================
+   以下为业务逻辑代码，一般无需修改
+   ======================================================= */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+let startDateStr = new Date().toISOString().split('T')[0];
+let notes = [];
+let specials = [];
+let photos = [];
+let currentPhotoId = null;
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function parseDate(str){
+  if(!str) return new Date();
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function fmtDate(str){
+  if(!str) return '';
+  const [y,m,d] = str.split('-');
+  return `${y}年${Number(m)}月${Number(d)}日`;
+}
+function daysBetween(a, b){
+  const A = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const B = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((B - A) / 86400000);
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+let toastTimer = null;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove('show'), 2000);
+}
+
+/* ---------- 背景爱心 ---------- */
+function makeHearts(){
+  const box = $('#heartsBg');
+  const chars = ['❤','💗','💞','🌸','✨','💕','🌷'];
+  for(let i=0;i<20;i++){
+    const s = document.createElement('span');
+    s.textContent = chars[Math.floor(Math.random()*chars.length)];
+    s.style.left = (Math.random()*100) + '%';
+    s.style.fontSize = (12 + Math.random()*24) + 'px';
+    s.style.opacity = (0.08 + Math.random()*0.16).toFixed(2);
+    s.style.animationDuration = (14 + Math.random()*16) + 's';
+    s.style.animationDelay = (-Math.random()*30) + 's';
+    box.appendChild(s);
+  }
+}
+
+function go(page){
+  $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+  $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- 计时 ---------- */
+function getDiff(){
+  const start = parseDate(startDateStr);
+  const now = new Date();
+  let ms = now - start;
+  if(ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  return {
+    days: Math.floor(totalSec / 86400),
+    hours: Math.floor((totalSec % 86400) / 3600),
+    mins: Math.floor((totalSec % 3600) / 60),
+    secs: totalSec % 60,
+    totalSec
+  };
+}
+function renderTimer(){
+  const d = getDiff();
+  if($('#homeDays')) $('#homeDays').textContent = d.days;
+  if($('#homePrecise')) $('#homePrecise').textContent = `${d.days} 天 ${d.hours} 小时 ${d.mins} 分 ${d.secs} 秒`;
+  if($('#stDays')) $('#stDays').textContent = d.days;
+  if($('#stHours')) $('#stHours').textContent = Math.floor(d.totalSec / 3600);
+  if($('#stMins')) $('#stMins').textContent = Math.floor(d.totalSec / 60);
+  if($('#stSecs')) $('#stSecs').textContent = d.totalSec;
+}
+
+/* ---------- 重要日子 ---------- */
+function renderSpecials(){
+  const box = $('#specialList');
+  if(!box) return;
+  if(!specials.length){
+    box.innerHTML = '<div class="empty" style="padding:18px">还没有添加重要日子～</div>';
+  }else{
+    const sorted = [...specials].sort((a,b)=> parseDate(a.date) - parseDate(b.date));
+    const today = new Date();
+    box.innerHTML = sorted.map(s => {
+      const target = parseDate(s.date);
+      const diff = daysBetween(today, target);
+      let label, cls = '';
+      if(diff > 0) label = `还有 ${diff} 天`;
+      else if(diff === 0) label = '就是今天 🎉';
+      else { label = `已过去 ${-diff} 天`; cls = 'past'; }
+      return `<div class="special-item">
+        <div class="special-info">
+          <div class="special-name">${escapeHtml(s.name)}</div>
+          <div class="special-date">${fmtDate(s.date)}</div>
+        </div>
+        <div class="special-days ${cls}">${label}</div>
+        <button class="del-x" data-del-special="${s.id}">×</button>
+      </div>`;
+    }).join('');
+  }
+  if($('#miniSpecial')) $('#miniSpecial').textContent = specials.length + ' 个重要日子';
+}
+
+/* ---------- 照片 ---------- */
+function compressImage(file, maxSize = 1280, quality = 0.82){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxSize || h > maxSize){
+          const r = Math.min(maxSize / w, maxSize / h);
+          w = Math.round(w * r); h = Math.round(h * r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+      };
+      img.onerror = () => reject(new Error('图片解析失败'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('文件读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPhotos(){
+  const grid = $('#photoGrid');
+  if(!grid) return;
+  const sorted = [...photos].sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
+  grid.innerHTML = sorted.map(p => {
+    // 获取公开访问链接
+    const { data } = db.storage.from('photos').getPublicUrl(p.file);
+    const url = data.publicUrl;
+    return `
+      <div class="photo-item" data-photo="${p.id}">
+        <img src="${url}" alt="回忆" loading="lazy">
+        ${p.note ? `<div class="ph-note">${escapeHtml(p.note)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+  $('#photoEmpty').style.display = photos.length ? 'none' : 'block';
+  $('#miniPhotos').textContent = photos.length + ' 张回忆';
+}
+
+function openLightbox(id){
+  const p = photos.find(x => x.id === id);
+  if(!p) return;
+  currentPhotoId = id;
+  const { data } = db.storage.from('photos').getPublicUrl(p.file);
+  $('#lbImg').src = data.publicUrl;
+  $('#lbNoteText').textContent = p.note || '';
+  $('#lightbox').classList.add('show');
+}
+function closeLightbox(){
+  $('#lightbox').classList.remove('show');
+  currentPhotoId = null;
+}
+
+/* ---------- 留言 ---------- */
+function renderNotes(){
+  const list = $('#noteList');
+  if(!list) return;
+  const sorted = [...notes].sort((a,b)=> b.time - a.time);
+  list.innerHTML = sorted.map(n => `
+    <div class="note-item">
+      <div class="note-text">${escapeHtml(n.text)}</div>
+      <div class="note-time">${n.time_str || ''}</div>
+      <button class="del-x" data-del-note="${n.id}">×</button>
+    </div>
+  `).join('');
+  $('#noteEmpty').style.display = notes.length ? 'none' : 'block';
+  $('#miniNotes').textContent = notes.length + ' 条留言';
+}
+
+/* ---------- 情话 ---------- */
+const QUOTES = [
+  '你一笑，我整个世界都亮了。', '想和你把所有的平凡日子，过成诗。', '喜欢你这件事，我从来没打算停下来。',
+  '世界那么大，我只想赖在你身边。', '你是我所有温柔的来源和归属。', '和你在一起，连发呆都是甜的。',
+  '我的开心有很多种，见到你是第一种。', '想牵着你的手，从日出走到日落。', '你是我藏在心里的、不愿分享的宝贝。',
+  '以后的每个春夏秋冬，我都想陪你过。', '你不用多好，我喜欢就好。', '想成为你疲惫生活里的那颗糖。',
+  '只要你在，哪里都是家。', '愿我如星君如月，夜夜流光相皎洁。', '余生请多指教，我的小朋友。',
+  '遇见你之后，人生突然有了意义。', '我不太会说情话，但我想陪你很久很久。', '今天也很想你，比昨天多一点。',
+  '你在我身边的时候，我从来没羡慕过别人。', '往后余生，风雪是你，平淡是你，清贫是你，荣华是你。'
+];
+function randomQuote(){
+  const box = $('#quoteBox');
+  let q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  if(QUOTES.length > 1 && box.textContent === q){
+    q = QUOTES[(QUOTES.indexOf(q) + 1) % QUOTES.length];
+  }
+  box.style.opacity = 0;
+  setTimeout(()=>{ box.textContent = q; box.style.transition = 'opacity .3s'; box.style.opacity = 1; }, 130);
+}
+
+/* ---------- 游戏：翻牌 ---------- */
+const MEM_EMOJIS = ['💖','🌹','🐻','🍰','🎁','🎈','🌙','⭐'];
+let memState = { first: null, lock: false, moves: 0, matched: 0, deck: [] };
+
+function initMemory(){
+  memState = { first: null, lock: false, moves: 0, matched: 0, deck: [...MEM_EMOJIS, ...MEM_EMOJIS].sort(()=> Math.random() - 0.5) };
+  $('#memGrid').innerHTML = memState.deck.map((e, i) => `
+    <div class="mem-card" data-idx="${i}">
+      <div class="mem-inner"><div class="mem-front">?</div><div class="mem-back">${e}</div></div>
+    </div>
+  `).join('');
+  $('#memMoves').textContent = 0; $('#memPairs').textContent = 0; $('#memMsg').textContent = '';
+}
+
+function bindMemory(){
+  $('#memGrid').addEventListener('click', ev => {
+    const card = ev.target.closest('.mem-card');
+    if(!card || memState.lock) return;
+    if(card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+    const idx = Number(card.dataset.idx);
+    card.classList.add('flipped');
+
+    if(memState.first === null){
+      memState.first = { idx, card }; return;
+    }
+    const first = memState.first;
+    memState.first = null;
+    memState.moves++;
+    $('#memMoves').textContent = memState.moves;
+
+    if(memState.deck[first.idx] === memState.deck[idx]){
+      first.card.classList.add('matched'); card.classList.add('matched');
+      memState.matched++;
+      $('#memPairs').textContent = memState.matched;
+      if(memState.matched === MEM_EMOJIS.length){
+        $('#memMsg').textContent = `🎉 全部配对成功！用了 ${memState.moves} 步，你真棒！`;
+      }
+    }else{
+      memState.lock = true;
+      setTimeout(()=>{
+        first.card.classList.remove('flipped'); card.classList.remove('flipped');
+        memState.lock = false;
+      }, 760);
+    }
+  });
+}
+
+/* ---------- 游戏：抓爱心 ---------- */
+let catchTimer = null; let catchScore = 0; let catchLeft = 30; let catchRunning = false;
+
+function catchMoveHeart(){
+  const area = $('#catchArea'); const heart = $('#catchHeart'); const size = 62;
+  const maxX = Math.max(0, area.clientWidth - size); const maxY = Math.max(0, area.clientHeight - size);
+  heart.style.left = Math.round(Math.random() * maxX) + 'px';
+  heart.style.top  = Math.round(Math.random() * maxY) + 'px';
+}
+
+function startCatch(){
+  if(catchRunning) return;
+  catchRunning = true; catchScore = 0; catchLeft = 30;
+  $('#catchScore').textContent = 0; $('#catchTime').textContent = 30;
+  $('#catchTip').style.display = 'none'; $('#catchBtn').textContent = '游戏中…';
+  $('#catchHeart').style.display = 'grid'; catchMoveHeart();
+  clearInterval(catchTimer);
+  catchTimer = setInterval(()=>{
+    catchLeft--; $('#catchTime').textContent = catchLeft;
+    if(catchLeft <= 0) endCatch();
+  }, 1000);
+}
+
+function endCatch(){
+  clearInterval(catchTimer); catchRunning = false;
+  $('#catchHeart').style.display = 'none'; $('#catchBtn').textContent = '再玩一次';
+  const tip = $('#catchTip'); tip.style.display = 'grid';
+  tip.textContent = `时间到！你抓住了 ${catchScore} 颗爱心 💗`;
+  const best = Number(localStorage.getItem('love.catchBest') || 0);
+  if(catchScore > best){ localStorage.setItem('love.catchBest', catchScore); tip.textContent = `🎉 新纪录！${catchScore} 颗爱心，太厉害了！`; }
+  $('#catchBest').textContent = Math.max(best, catchScore);
+}
+
+function bindCatch(){
+  $('#catchBtn').addEventListener('click', startCatch);
+  $('#catchHeart').addEventListener('pointerdown', ev => {
+    ev.preventDefault(); if(!catchRunning) return;
+    catchScore++; $('#catchScore').textContent = catchScore; catchMoveHeart();
+  });
+  $('#catchBest').textContent = localStorage.getItem('love.catchBest') || 0;
+}
+
+/* ---------- 游戏：石头剪刀布 ---------- */
+const RPS_EMOJI = { rock: '✊', scissors: '✌️', paper: '✋' };
+const RPS_BEATS = { rock: 'scissors', scissors: 'paper', paper: 'rock' };
+let rpsScore = { me: 0, cpu: 0 };
+
+function bindRPS(){
+  $$('[data-rps]').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      const me = btn.dataset.rps; const keys = Object.keys(RPS_EMOJI);
+      const cpu = keys[Math.floor(Math.random() * keys.length)];
+      let result, color;
+      if(me === cpu){ result = '平局～再来一次！'; color = '#a394a6'; }
+      else if(RPS_BEATS[me] === cpu){ rpsScore.me++; result = `你赢了！${RPS_EMOJI[me]} 赢 ${RPS_EMOJI[cpu]}，好厉害～`; color = '#ff5c9d'; }
+      else{ rpsScore.cpu++; result = `我赢了！${RPS_EMOJI[cpu]} 赢 ${RPS_EMOJI[me]}，嘿嘿～`; color = '#9b6cf0'; }
+      $('#rpsMe').textContent = rpsScore.me; $('#rpsCpu').textContent = rpsScore.cpu;
+      const el = $('#rpsResult'); el.style.color = color; el.textContent = result;
+    });
+  });
+}
+
+/* ---------- 从 Supabase 加载数据 ---------- */
+async function loadData(){
+  try {
+    // 1. 读留言
+    const { data: nData } = await db.from('notes').select('*');
+    if(nData) notes = nData;
+
+    // 2. 读重要日子 & 纪念日配置
+    const { data: sData } = await db.from('specials').select('*');
+    if(sData) {
+      const startRec = sData.find(x => x.name === '__startDate__');
+      if(startRec && startRec.date) {
+        startDateStr = startRec.date;
+      }
+      specials = sData.filter(x => x.name !== '__startDate__');
+    }
+
+    // 3. 读照片信息
+    const { data: pData } = await db.from('photos').select('*');
+    if(pData) photos = pData;
+
+    renderAll();
+  } catch(e) {
+    console.error(e);
+    toast('连接云端失败，请检查网络或配置');
+  }
+}
+
+function renderAll(){
+  $('#startDateInput').value = startDateStr;
+  renderTimer(); renderSpecials(); renderPhotos(); renderNotes();
+}
+
+/* ---------- 事件绑定 ---------- */
+function bindEvents(){
+  $$('.nav-btn').forEach(btn => btn.addEventListener('click', ()=> go(btn.dataset.page)));
+  $$('[data-go]').forEach(el => el.addEventListener('click', ()=> go(el.dataset.go)));
+
+  // 保存纪念日
+  $('#saveStartBtn').addEventListener('click', async ()=>{
+    const v = $('#startDateInput').value;
+    if(!v){ toast('请选择一个日期'); return; }
+    
+    // 查找是否已存在
+    const { data } = await db.from('specials').select('id').eq('name', '__startDate__');
+    if(data && data.length > 0) {
+      await db.from('specials').update({ date: v }).eq('name', '__startDate__');
+    } else {
+      await db.from('specials').insert([{ name: '__startDate__', date: v }]);
+    }
+    startDateStr = v; renderTimer(); toast('纪念日已同步到云端 ❤');
+  });
+
+  // 添加重要日子
+  $('#addSpecialBtn').addEventListener('click', async ()=>{
+    const name = $('#specialName').value.trim();
+    const date = $('#specialDate').value;
+    if(!name || !date){ toast('请填写名称和日期'); return; }
+    
+    const newItem = { name, date };
+    const { data, error } = await db.from('specials').insert([newItem]).select();
+    if(!error && data) {
+      specials.push(data[0]);
+      $('#specialName').value = ''; $('#specialDate').value = '';
+      renderSpecials(); toast('已添加并同步 💗');
+    } else { toast('添加失败，请重试'); }
+  });
+
+  // 删除重要日子
+  $('#specialList').addEventListener('click', async ev => {
+    const btn = ev.target.closest('[data-del-special]');
+    if(!btn) return;
+    const id = btn.dataset.delSpecial;
+    await db.from('specials').delete().eq('id', id);
+    specials = specials.filter(s => s.id !== id);
+    renderSpecials();
+  });
+
+  // 上传照片
+  $('#photoInput').addEventListener('change', async ev => {
+    const files = Array.from(ev.target.files || []);
+    if(!files.length) return;
+    toast('正在上传，请稍候…');
+    let added = 0;
+    
+    for(const f of files){
+      if(!f.type.startsWith('image/')) continue;
+      try{
+        const blob = await compressImage(f);
+        const fileName = `img_${Date.now()}_${Math.random().toString(36).slice(2,6)}.jpg`;
+        
+        // 1. 上传文件到 Storage
+        const { error: uploadErr } = await db.storage.from('photos').upload(fileName, blob, { contentType: 'image/jpeg' });
+        if(uploadErr) throw uploadErr;
+
+        // 2. 写入数据库表
+        const newPhoto = { file: fileName, note: '' };
+        const { data, error: dbErr } = await db.from('photos').insert([newPhoto]).select();
+        if(dbErr) throw dbErr;
+
+        photos.push(data[0]);
+        added++;
+      }catch(err){ console.warn('上传失败', err); }
+    }
+    ev.target.value = '';
+    renderPhotos();
+    toast(added ? `成功上传 ${added} 张照片 📷` : '照片上传失败');
+  });
+
+  // 点击照片
+  $('#photoGrid').addEventListener('click', ev => {
+    const item = ev.target.closest('[data-photo]');
+    if(item) openLightbox(item.dataset.photo);
+  });
+
+  $('#lbClose').addEventListener('click', closeLightbox);
+  $('#lightbox').addEventListener('click', ev => { if(ev.target.id === 'lightbox') closeLightbox(); });
+
+  // 修改照片备注
+  $('#lbNote').addEventListener('click', async ()=>{
+    const p = photos.find(x => x.id === currentPhotoId);
+    if(!p) return;
+    const note = prompt('给这张照片写一句话吧～', p.note || '');
+    if(note === null) return;
+    
+    const { error } = await db.from('photos').update({ note: note.trim() }).eq('id', p.id);
+    if(!error){
+      p.note = note.trim();
+      $('#lbNoteText').textContent = p.note;
+      renderPhotos(); toast('备注已同步 ✨');
+    }
+  });
+
+  // 删除照片
+  $('#lbDel').addEventListener('click', async ()=>{
+    if(!currentPhotoId) return;
+    if(!confirm('确定要删除这张照片吗？')) return;
+    const p = photos.find(x => x.id === currentPhotoId);
+    
+    // 1. 删存储桶里的文件
+    await db.storage.from('photos').remove([p.file]);
+    // 2. 删数据库记录
+    await db.from('photos').delete().eq('id', p.id);
+    
+    photos = photos.filter(x => x.id !== p.id);
+    renderPhotos(); closeLightbox(); toast('已删除');
+  });
+
+  // 添加留言
+  $('#addNoteBtn').addEventListener('click', async ()=>{
+    const text = $('#noteInput').value.trim();
+    if(!text){ toast('先写点什么吧～'); return; }
+    const now = new Date();
+    const newNote = {
+      text,
+      time: now.getTime(),
+      time_str: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+    };
+    
+    const { data, error } = await db.from('notes').insert([newNote]).select();
+    if(!error && data){
+      notes.push(data[0]);
+      $('#noteInput').value = ''; renderNotes(); toast('已发送并同步 💌');
+    }
+  });
+
+  // 删除留言
+  $('#noteList').addEventListener('click', async ev => {
+    const btn = ev.target.closest('[data-del-note]');
+    if(!btn) return;
+    const id = btn.dataset.delNote;
+    if(!confirm('删除这条留言吗？')) return;
+    
+    await db.from('notes').delete().eq('id', id);
+    notes = notes.filter(n => n.id !== id);
+    renderNotes();
+  });
+
+  // 游戏相关
+  $('#quoteBtn').addEventListener('click', randomQuote);
+  $$('.tab').forEach(tab => {
+    tab.addEventListener('click', ()=>{
+      $$('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active');
+      $$('.game-panel').forEach(p => p.classList.remove('active'));
+      const panel = $('#game-' + tab.dataset.game); if(panel) panel.classList.add('active');
+      if(tab.dataset.game === 'catch' && catchRunning) endCatch();
+    });
+  });
+
+  $('#memReset').addEventListener('click', initMemory);
+  bindMemory(); bindCatch(); bindRPS();
+  document.addEventListener('keydown', ev => { if(ev.key === 'Escape') closeLightbox(); });
+}
+
+/* ---------- 启动 ---------- */
+async function init(){
+  makeHearts();
+  bindEvents();
+  initMemory();
+  randomQuote();
+  await loadData(); // 从云端读取
+  setInterval(renderTimer, 1000);
+  setTimeout(()=> toast('已连接云端，数据会自动同步 ❤'), 700);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
